@@ -43,6 +43,35 @@ if [ ! -z $TIMEOUT ]; then
     sudo shutdown -h +$TIMEOUT&
 fi
 
+# Configure Presto (EMR release doesn't allow to configure jvm.config)
+PRESTO_CONFIG_SCRIPT=$(cat <<EOF
+while ! pgrep presto > /dev/null; do sleep 1; done
+
+sudo sh -c "sudo cat <<EOF > /etc/presto/conf/jvm.config
+-verbose:class
+-server
+-Xmx45G
+-Xms45G
+-Xmn512M
+-XX:+UseConcMarkSweepGC
+-XX:+ExplicitGCInvokesConcurrent
+-XX:+CMSClassUnloadingEnabled
+-XX:+AggressiveOpts
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:OnOutOfMemoryError=kill -9 %p
+-XX:ReservedCodeCacheSize=150M
+-Xbootclasspath/p:
+-Dhive.config.resources=/etc/hadoop/conf/core-site.xml,/etc/hadoop/conf/hdfs-site.xml
+-Djava.library.path=/usr/lib/hadoop/lib/native/:/usr/lib/hadoop-lzo/lib/native/:/usr/lib/
+EOF"
+sudo pkill presto
+exit 0
+EOF
+)
+echo "${PRESTO_CONFIG_SCRIPT}" | tee /tmp/presto_config.sh
+chmod u+x /tmp/presto_config.sh
+/tmp/presto_config.sh &
+
 # Continue only if master node
 if [ "$IS_MASTER" = false ]; then
     exit

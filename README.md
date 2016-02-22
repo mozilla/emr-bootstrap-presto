@@ -10,8 +10,8 @@ export KEY_NAME=mozilla_vitillo
 aws emr create-cluster \
   --region us-west-2 \
   --name PrestoCluster \
-  --instance-type c3.2xlarge \
-  --instance-count 2 \
+  --instance-type r3.2xlarge \
+  --instance-count 11 \
   --service-role EMR_DefaultRole \
   --ec2-attributes KeyName=${KEY_NAME},InstanceProfile=EMR_EC2_DefaultRole \
   --release-label emr-4.3.0 \
