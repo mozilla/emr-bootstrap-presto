@@ -43,7 +43,8 @@ if [ ! -z $TIMEOUT ]; then
     sudo shutdown -h +$TIMEOUT&
 fi
 
-# Configure Presto (EMR release doesn't allow to configure jvm.config)
+# Configure Presto and Hive after the services are up
+# (EMR release doesn't allow to configure Presto's jvm.config)
 PRESTO_CONFIG_SCRIPT=$(cat <<EOF
 while ! pgrep presto > /dev/null; do sleep 1; done
 
@@ -65,6 +66,13 @@ sudo sh -c "sudo cat <<EOF > /etc/presto/conf/jvm.config
 -Djava.library.path=/usr/lib/hadoop/lib/native/:/usr/lib/hadoop-lzo/lib/native/:/usr/lib/
 EOF"
 sudo pkill presto
+
+# Load Parquet datasets into Hive
+if [ "$IS_MASTER" = true ]; then
+    /usr/local/bin/parquet2hive -d s3://telemetry-parquet/longitudinal | xargs -0 hive -e
+    /usr/local/bin/parquet2hive -d s3://telemetry-parquet/executive_stream | xargs -0 hive -e
+fi
+
 exit 0
 EOF
 )
@@ -259,7 +267,3 @@ sudo aws s3 cp $TELEMETRY_CONF_BUCKET/certificate/nginx.key /etc/nginx/ssl/
 sudo aws s3 cp $TELEMETRY_CONF_BUCKET/redash/nginx/nginx.conf /etc/nginx/
 sudo aws s3 cp $TELEMETRY_CONF_BUCKET/redash/nginx/redash.conf /etc/nginx/conf.d/
 service nginx restart
-
-# Load Parquet datasets into Hive
-/usr/local/bin/parquet2hive -d s3://telemetry-parquet/longitudinal | xargs -0 hive -e
-/usr/local/bin/parquet2hive -d s3://telemetry-parquet/executive_stream | xargs -0 hive -e
