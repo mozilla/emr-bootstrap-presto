@@ -69,8 +69,10 @@ sudo pkill presto
 
 # Load Parquet datasets into Hive
 if [ "$IS_MASTER" = true ]; then
-    /usr/local/bin/parquet2hive -d s3://telemetry-parquet/longitudinal | xargs -0 hive -e
-    /usr/local/bin/parquet2hive -d s3://telemetry-parquet/executive_stream | xargs -0 hive -e
+    /usr/local/bin/parquet2hive s3://telemetry-parquet/longitudinal | bash
+    /usr/local/bin/parquet2hive s3://telemetry-parquet/executive_stream | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/mfinkle/android_clients | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/mfinkle/android_events | bash
 fi
 
 exit 0
