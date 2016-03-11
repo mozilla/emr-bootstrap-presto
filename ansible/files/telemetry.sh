@@ -285,6 +285,9 @@ wget -O /etc/init.d/redash_supervisord $FILES_BASE_URL"redash_supervisord_init"
 add_service "redash_supervisord"
 
 # Nginx setup
+sudo mkdir -p /etc/nginx/ssl
+sudo aws s3 cp $TELEMETRY_CONF_BUCKET/certificate/nginx.crt /etc/nginx/ssl/
+sudo aws s3 cp $TELEMETRY_CONF_BUCKET/certificate/nginx.key /etc/nginx/ssl/
 sudo aws s3 cp $TELEMETRY_CONF_BUCKET/redash/nginx/nginx.conf /etc/nginx/
 sudo aws s3 cp $TELEMETRY_CONF_BUCKET/redash/nginx/redash.conf /etc/nginx/conf.d/
 service nginx restart
