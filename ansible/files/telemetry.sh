@@ -1,7 +1,7 @@
 TELEMETRY_CONF_BUCKET=s3://telemetry-presto-emr
 
 # Install packages
-sudo yum -y install git jq htop tmux aws-cli zsh
+sudo yum -y install git jq htop tmux aws-cli zsh emacs
 sudo pip install parquet2hive
 
 # Check for master node
@@ -205,6 +205,28 @@ if [ ! -d "$VERSION_DIR" ]; then
 
     cd /opt/redash/current
 
+    # https://github.com/getredash/redash/issues/884
+    cat << EOF > /tmp/https.patch
+diff --git a/redash/handlers/static.py b/redash/handlers/static.py
+index e59c7f3..4b0a4ba 100644
+--- a/redash/handlers/static.py
++++ b/redash/handlers/static.py
+@@ -49,9 +49,9 @@ def index(**kwargs):
+     }
+ 
+     if settings.MULTI_ORG:
+-        base_href = url_for('index', _external=True, org_slug=current_org.slug)
++        base_href = url_for('index', _external=True, org_slug=current_org.slug, _scheme="https")
+     else:
+-        base_href = url_for('index', _external=True)
++        base_href = url_for('index', _external=True, _scheme="https")
+ 
+     response = render_template("index.html",
+                                user=json.dumps(user),
+EOF
+
+    patch -p1 /tmp/https.patch
+
     # TODO: venv?
     pip install -r requirements.txt
     sudo pip install --upgrade git+https://github.com/vitillo/PyHive.git@pretty
@@ -263,9 +285,6 @@ wget -O /etc/init.d/redash_supervisord $FILES_BASE_URL"redash_supervisord_init"
 add_service "redash_supervisord"
 
 # Nginx setup
-sudo mkdir -p /etc/nginx/ssl
-sudo aws s3 cp $TELEMETRY_CONF_BUCKET/certificate/nginx.crt /etc/nginx/ssl/
-sudo aws s3 cp $TELEMETRY_CONF_BUCKET/certificate/nginx.key /etc/nginx/ssl/
 sudo aws s3 cp $TELEMETRY_CONF_BUCKET/redash/nginx/nginx.conf /etc/nginx/
 sudo aws s3 cp $TELEMETRY_CONF_BUCKET/redash/nginx/redash.conf /etc/nginx/conf.d/
 service nginx restart

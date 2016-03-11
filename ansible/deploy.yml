@@ -4,6 +4,11 @@
   vars:
     - region: us-west-2
     - bucket: telemetry-presto-emr
+    - cluster_id: j-1JYIUZMEOATJ9
+    - elb_name: telemetry-sql-lb
+    - dns_zone: dev.mozaws.net.
+    - dns_record: sql-telemetry-m-o.dev.mozaws.net
+    - cert_arn: "arn:aws:iam::927034868273:server-certificate/exp20180829_star_telemetry_mozilla_org"
 
   tasks:
     - name: create bucket
@@ -15,3 +20,85 @@
     - name: copy EMR configuration
       s3: bucket={{bucket}} region={{region}} object=configuration/configuration.json src=files/configuration.json mode=put
 
+    - name: telemetry SQL ELB
+      register: elb_sg
+      ec2_group:
+        name: telemetry-sql-securitygroup-elb
+        description: telemetry SQL ELB
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: tcp
+            from_port: 0
+            to_port: 65535
+            cidr_ip: 0.0.0.0/0
+
+    - name: telemetry SQL sg
+      register: sg
+      ec2_group:
+        name: telemetry-sql-securitygroup
+        description: telemetry SQL SG
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            group_name: "{{ elb_sg.group_id }}"
+        rules_egress:
+          - proto: tcp
+            from_port: 0
+            to_port: 65535
+            cidr_ip: 0.0.0.0/0
+    - name: ELB
+      register: elb
+      ec2_elb_lb:
+        name: "{{ elb_name }}"
+        state: present
+        region: "{{ region }}"
+        health_check:
+          ping_protocol: tcp # options are http, https, ssl, tcp
+          ping_port: 443
+          response_timeout: 5 # seconds
+          interval: 30 # seconds
+          unhealthy_threshold: 2
+          healthy_threshold: 2
+        zones:
+          - us-west-2a
+          - us-west-2b
+          - us-west-2c
+        security_group_ids: "{{ elb_sg.group_id }}"
+        listeners:
+          - protocol: https
+            load_balancer_port: 443
+            instance_protocol: http # optional, defaults to value of protocol setting
+            instance_port: 80
+            # ssl certificate required for https or ssl
+            ssl_certificate_id: "{{ cert_arn }}"
+          - protocol: http
+            load_balancer_port: 80
+            instance_protocol: http # optional, defaults to value of protocol setting
+            instance_port: 80
+    - local_action:
+        module: ec2_elb
+        region: "{{ region }}"
+        instance_id: "{{ lookup('emr_master_instance_id', region, cluster_id) }}"
+        ec2_elbs: "{{ elb_name }}"
+        state: present
+
+    - name: CNAME Telemetry SQL
+      route53:
+        command: create
+        zone: "{{ dns_zone }}"
+        record: "{{ dns_record }}"
+        type: CNAME
+        ttl: 60
+        value: "{{ elb.elb.dns_name }}"
+        overwrite: true
