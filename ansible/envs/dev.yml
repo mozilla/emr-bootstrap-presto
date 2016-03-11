@@ -1,0 +1,7 @@
+region: us-west-2
+bucket: telemetry-presto-emr
+emr_cluster_id: j-1JYIUZMEOATJ9
+elb_name: telemetry-sql-lb
+dns_zone: dev.mozaws.net.
+dns_record: sql-telemetry-m-o.dev.mozaws.net
+cert_arn: "arn:aws:iam::927034868273:server-certificate/exp20180829_star_telemetry_mozilla_org"
