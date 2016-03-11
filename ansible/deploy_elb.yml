@@ -47,8 +47,9 @@
         state: present
         region: "{{region}}"
         health_check:
-          ping_protocol: tcp
-          ping_port: 443
+          ping_protocol: http
+          ping_port: 80
+          ping_path: "/ping"
           response_timeout: 5
           interval: 30
           unhealthy_threshold: 2
