@@ -67,6 +67,24 @@ sudo sh -c "sudo cat <<EOF > /etc/presto/conf/jvm.config
 EOF"
 sudo pkill presto
 
+# upgrade hive
+tmp="$(mktemp -d)"
+cd "$tmp"
+aws s3 sync s3://telemetry-presto-emr/packages/ .
+tar zxvf apache-hive-1.2.1-bin.tar.gz
+mv apache-hive-1.2.1-bin /usr/lib/hive-1-2
+cp -a /var/lib/hive /var/lib/hive-1-2
+rm -rf /usr/lib/hive-1-2/conf
+ln -t /usr/lib/hive-1-2 -s /etc/hive/conf
+cp hive-1-2-metastore.conf /etc/init/hive-1-2-metastore.conf
+sed -i 's|/usr/lib/hive|/usr/lib/hive-1-2|' /usr/bin/hive
+cp /usr/lib/hive/lib/mariadb-connector-java.jar /usr/lib/hive-1-2/lib/
+# sed -i 's|org.mariadb.jdbc.Driver|com.mysql.jdbc.Driver|' /etc/hive/conf/hive-site.xml
+initctl stop hive-metastore
+initctl start hive-1-2-metastore
+cd -
+rm -rf "$tmp"
+
 # Load Parquet datasets into Hive
 if [ "$IS_MASTER" = true ]; then
     /usr/local/bin/parquet2hive s3://telemetry-parquet/longitudinal | bash
@@ -213,14 +231,14 @@ index e59c7f3..4b0a4ba 100644
 +++ b/redash/handlers/static.py
 @@ -49,9 +49,9 @@ def index(**kwargs):
      }
- 
+
      if settings.MULTI_ORG:
 -        base_href = url_for('index', _external=True, org_slug=current_org.slug)
 +        base_href = url_for('index', _external=True, org_slug=current_org.slug, _scheme="https")
      else:
 -        base_href = url_for('index', _external=True)
 +        base_href = url_for('index', _external=True, _scheme="https")
- 
+
      response = render_template("index.html",
                                 user=json.dumps(user),
 EOF
