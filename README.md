@@ -13,7 +13,7 @@ aws emr create-cluster \
   --instance-type r3.2xlarge \
   --instance-count 11 \
   --service-role EMR_DefaultRole \
-  --ec2-attributes KeyName=${KEY_NAME},InstanceProfile=EMR_EC2_DefaultRole,AdditionalMasterSecurityGroups=telemetry-sql-securitygroup \
+  --ec2-attributes KeyName=${KEY_NAME},InstanceProfile=EMR_EC2_DefaultRole,AdditionalMasterSecurityGroups=sg-263db541 \
   --release-label emr-4.3.0 \
   --applications Name=Presto-Sandbox \
   --bootstrap-actions Path=s3://${PRESTO_BUCKET}/bootstrap/telemetry.sh \
