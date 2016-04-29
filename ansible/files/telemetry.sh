@@ -68,9 +68,9 @@ EOF"
 sudo pkill presto
 
 # upgrade hive
-tmp="$(mktemp -d)"
-cd "$tmp"
-aws s3 sync s3://telemetry-presto-emr/packages/ .
+tmp="\$(mktemp -d)"
+cd "\$tmp"
+aws s3 sync $TELEMETRY_CONF_BUCKET/packages/ .
 tar zxvf apache-hive-1.2.1-bin.tar.gz
 mv apache-hive-1.2.1-bin /usr/lib/hive-1-2
 cp -a /var/lib/hive /var/lib/hive-1-2
@@ -83,7 +83,7 @@ cp /usr/lib/hive/lib/mariadb-connector-java.jar /usr/lib/hive-1-2/lib/
 initctl stop hive-metastore
 initctl start hive-1-2-metastore
 cd -
-rm -rf "$tmp"
+rm -rf "\$tmp"
 
 # Load Parquet datasets into Hive
 if [ "$IS_MASTER" = true ]; then
@@ -243,7 +243,7 @@ index e59c7f3..4b0a4ba 100644
                                 user=json.dumps(user),
 EOF
 
-    patch -p1 /tmp/https.patch
+    patch -p1 /opt/redash/redash*/redash/handlers/static.py /tmp/https.patch
 
     # TODO: venv?
     pip install -r requirements.txt
