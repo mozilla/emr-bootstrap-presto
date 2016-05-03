@@ -70,18 +70,19 @@ sudo pkill presto
 # upgrade hive
 tmp="\$(mktemp -d)"
 cd "\$tmp"
-aws s3 sync $TELEMETRY_CONF_BUCKET/packages/ .
-tar zxvf apache-hive-1.2.1-bin.tar.gz
-mv apache-hive-1.2.1-bin /usr/lib/hive-1-2
-cp -a /var/lib/hive /var/lib/hive-1-2
-rm -rf /usr/lib/hive-1-2/conf
-ln -t /usr/lib/hive-1-2 -s /etc/hive/conf
-cp hive-1-2-metastore.conf /etc/init/hive-1-2-metastore.conf
-sed -i 's|/usr/lib/hive|/usr/lib/hive-1-2|' /usr/bin/hive
-cp /usr/lib/hive/lib/mariadb-connector-java.jar /usr/lib/hive-1-2/lib/
-# sed -i 's|org.mariadb.jdbc.Driver|com.mysql.jdbc.Driver|' /etc/hive/conf/hive-site.xml
+v=1.2.1
+aws s3 sync $TELEMETRY_CONF_BUCKET/packages/hive/\$v .
+tar zxvf apache-hive-\$v-bin.tar.gz
+mv apache-hive-\$v-bin /usr/lib/hive-\$v
+cp -a /var/lib/hive /var/lib/hive-\$v
+rm -rf /usr/lib/hive-\$v/conf
+ln -t /usr/lib/hive-\$v -s /etc/hive/conf
+cp hive-\$v-metastore.conf /etc/init/hive-\$v-metastore.conf
+sed -i "s|/usr/lib/hive|/usr/lib/hive-\$v|" /usr/bin/hive
+cp /usr/lib/hive/lib/mariadb-connector-java.jar /usr/lib/hive-\$v/lib/
+# sed -i "s|org.mariadb.jdbc.Driver|com.mysql.jdbc.Driver|" /etc/hive/conf/hive-site.xml
 initctl stop hive-metastore
-initctl start hive-1-2-metastore
+initctl start hive-\$v-metastore
 cd -
 rm -rf "\$tmp"
 
