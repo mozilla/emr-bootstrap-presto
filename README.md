@@ -22,5 +22,5 @@ aws emr create-cluster \
 
 ## Deploy bootstrap scripts to AWS via ansible
 ```bash
-ansible-playbook ansible/deploy_bootstrap.yml --extra-vars "@ansible/envs/dev.yml" -i ansible/inventory
+ansible-playbook ansible/deploy_bootstrap.yml --extra-vars "@ansible/envs/dev.yml"
 ```
