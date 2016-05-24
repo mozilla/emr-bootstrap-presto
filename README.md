@@ -22,12 +22,5 @@ aws emr create-cluster \
 
 ## Deploy bootstrap scripts to AWS via ansible
 ```bash
-ansible-playbook ansible/deploy_bootstrap.yml --extra-vars "@ansible/envs/dev.yml" -i ansible/inventory
-```
-
-## Deploy ELB via ansible
-Set the `emr_cluster_id` of the EMR cluster you want the ELB to front in ansible/envs/dev.yml.
-
-```bash
-ansible-playbook ansible/deploy_elb.yml --extra-vars "@ansible/envs/dev.yml" -i ansible/inventory
+ansible-playbook ansible/deploy_bootstrap.yml --extra-vars "@ansible/envs/dev.yml"
 ```
