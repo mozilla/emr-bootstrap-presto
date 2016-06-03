@@ -48,6 +48,9 @@ fi
 PRESTO_CONFIG_SCRIPT=$(cat <<EOF
 while ! pgrep presto > /dev/null; do sleep 1; done
 
+# install presto plugins
+sudo -u presto aws s3 sync $TELEMETRY_CONF_BUCKET/plugins/ /usr/lib/presto/plugin/
+
 sudo sh -c "sudo cat <<EOF > /etc/presto/conf/jvm.config
 -verbose:class
 -server
