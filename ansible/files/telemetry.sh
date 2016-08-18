@@ -91,10 +91,18 @@ rm -rf "\$tmp"
 
 # Load Parquet datasets into Hive
 if [ "$IS_MASTER" = true ]; then
-    /usr/local/bin/parquet2hive s3://telemetry-parquet/longitudinal | bash
-    /usr/local/bin/parquet2hive s3://telemetry-parquet/executive_stream | bash
-    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/mfinkle/android_clients | bash
-    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/mfinkle/android_events | bash
+    /usr/local/bin/parquet2hive s3://telemetry-parquet/crash_aggregates --use-last-version | tee -a crash_aggregates.log | bash
+    /usr/local/bin/parquet2hive s3://telemetry-parquet/client_count --use-last-version | tee -a client_count.log | bash
+    /usr/local/bin/parquet2hive s3://telemetry-parquet/longitudinal --use-last-version | tee -a longitudinal.log | bash
+    /usr/local/bin/parquet2hive s3://telemetry-parquet/main_summary --use-last-version | tee -a main_summary.log | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/mobile/android_clients --use-last-version | tee -a android_clients.log | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/mobile/android_events --use-last-version | tee -a android_events.log | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/mobile/android_addons --use-last-version | tee -a android_addons.log | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/mobile/mobile_clients --use-last-version | tee -a mobile_clients.log | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/ddurst/crash_stats_oom/ --use-last-version | tee -a crash_stats_oom.log | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/isegall/usearch_daily/ --use-last-version | tee -a usearch_daily.log | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/isegall/fxa_mau_dau_daily/ --use-last-version | tee -a fxa_mau_dau_daily.log | bash
+    /usr/local/bin/parquet2hive s3://net-mozaws-prod-us-west-2-pipeline-analysis/isegall/wayback_daily/ --use-last-version | tee -a wayback_daily.log | bash
 fi
 
 exit 0
