@@ -17,7 +17,8 @@ aws emr create-cluster \
   --release-label emr-4.3.0 \
   --applications Name=Presto-Sandbox \
   --bootstrap-actions Path=s3://${PRESTO_BUCKET}/bootstrap/telemetry.sh \
-  --configurations https://s3-us-west-2.amazonaws.com/${PRESTO_BUCKET}/configuration/configuration.json
+  --configurations https://s3-us-west-2.amazonaws.com/${PRESTO_BUCKET}/configuration/configuration.json \
+  --tags REAPER_SPARE_ME="true"
 ```
 
 ## Deploy bootstrap scripts to AWS via ansible
