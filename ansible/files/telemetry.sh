@@ -45,13 +45,13 @@ fi
 
 # Configure Presto and Hive after the services are up
 # (EMR release doesn't allow to configure Presto's jvm.config)
-PRESTO_CONFIG_SCRIPT=$(cat <<EOF
+cat > /tmp/presto_config.sh <<EOF
 while ! pgrep presto > /dev/null; do sleep 1; done
 
 # install presto plugins
 sudo -u presto aws s3 sync $TELEMETRY_CONF_BUCKET/plugins/ /usr/lib/presto/plugin/
 
-sudo sh -c "sudo cat <<EOF > /etc/presto/conf/jvm.config
+cat > /etc/presto/conf/jvm.config <<JVM_CONFIG
 -verbose:class
 -server
 -Xmx45G
@@ -67,8 +67,8 @@ sudo sh -c "sudo cat <<EOF > /etc/presto/conf/jvm.config
 -Xbootclasspath/p:
 -Dhive.config.resources=/etc/hadoop/conf/core-site.xml,/etc/hadoop/conf/hdfs-site.xml
 -Djava.library.path=/usr/lib/hadoop/lib/native/:/usr/lib/hadoop-lzo/lib/native/:/usr/lib/
-EOF"
-sudo pkill presto
+JVM_CONFIG
+pkill presto
 
 # upgrade hive
 tmp="\$(mktemp -d)"
@@ -76,16 +76,18 @@ cd "\$tmp"
 v=1.2.1
 aws s3 sync $TELEMETRY_CONF_BUCKET/packages/hive/\$v .
 tar zxvf apache-hive-\$v-bin.tar.gz
+mv apache-hive-\$v-bin/hcatalog /usr/lib/hive-\$v-hcatalog
 mv apache-hive-\$v-bin /usr/lib/hive-\$v
-cp -a /var/lib/hive /var/lib/hive-\$v
 rm -rf /usr/lib/hive-\$v/conf
 ln -t /usr/lib/hive-\$v -s /etc/hive/conf
-cp hive-\$v-metastore.conf /etc/init/hive-\$v-metastore.conf
-sed -i "s|/usr/lib/hive|/usr/lib/hive-\$v|" /usr/bin/hive
+sed -i "s|/usr/lib/hive|/usr/lib/hive-\$v|" \
+  /usr/bin/hive /usr/bin/hcat \
+  /etc/init/hive-hcatalog-server.conf \
+  /etc/default/hive-hcatalog-server
 cp /usr/lib/hive/lib/mariadb-connector-java.jar /usr/lib/hive-\$v/lib/
 # sed -i "s|org.mariadb.jdbc.Driver|com.mysql.jdbc.Driver|" /etc/hive/conf/hive-site.xml
-initctl stop hive-metastore
-initctl start hive-\$v-metastore
+initctl stop hive-hcatalog-server
+initctl start hive-hcatalog-server
 cd -
 rm -rf "\$tmp"
 
@@ -107,7 +109,5 @@ fi
 
 exit 0
 EOF
-)
-echo "${PRESTO_CONFIG_SCRIPT}" | tee /tmp/presto_config.sh
 chmod u+x /tmp/presto_config.sh
-/tmp/presto_config.sh &
+sudo /tmp/presto_config.sh &
