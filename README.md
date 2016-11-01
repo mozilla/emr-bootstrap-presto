@@ -1,27 +1,41 @@
-emr-bootstrap-presto
-===================
+# emr-bootstrap-presto
 
-This packages contains the AWS bootstrap scripts for Mozilla's flavoured Presto setup.
+This repo contains the CloudFormation templates and bootstrap scripts for
+setting up Mozilla's Presto cluster.
 
-## Interactive job
+## Prerequisites
+* ansible >= 2.2.0.0
+* boto
+* boto3
+
+## Creating Stacks
+
+### Metastore
 ```bash
-export PRESTO_BUCKET=telemetry-presto-emr
-export KEY_NAME=20151209-cloudservices-aws-ssh-dev
-aws emr create-cluster \
-  --region us-west-2 \
-  --name PrestoCluster \
-  --instance-type r3.2xlarge \
-  --instance-count 11 \
-  --service-role EMR_DefaultRole \
-  --ec2-attributes KeyName=${KEY_NAME},InstanceProfile=EMR_EC2_DefaultRole,AdditionalMasterSecurityGroups=sg-263db541 \
-  --release-label emr-4.3.0 \
-  --applications Name=Presto-Sandbox \
-  --bootstrap-actions Path=s3://${PRESTO_BUCKET}/bootstrap/telemetry.sh \
-  --configurations https://s3-us-west-2.amazonaws.com/${PRESTO_BUCKET}/configuration/configuration.json \
-  --tags REAPER_SPARE_ME="true"
+ansible-playbook \
+  playbooks/metastore.yml \
+  -e @envs/dev.yml \
+  -e owner=<yourname>@mozilla.com
 ```
 
-## Deploy bootstrap scripts to AWS via ansible
+### Presto
 ```bash
-ansible-playbook ansible/deploy_bootstrap.yml --extra-vars "@ansible/envs/dev.yml"
+ansible-playbook \
+  playbooks/presto.yml \
+  -e @envs/dev.yml \
+  -e owner=<yourname>@mozilla.com
 ```
+
+## Deploying Bootstrap Scripts
+
+```bash
+ansible-playbook \
+  playbooks/bootstrap.yml \
+  -e @envs/dev.yml
+```
+
+## Modifying Variables
+
+Besides the `owner` variable specified when creating the stack, everything lives
+in `vars/default.yml` and `envs/<env>.yml`. Any of these can be overridden at
+runtime by using the `-e` flag just as you did with `owner`.

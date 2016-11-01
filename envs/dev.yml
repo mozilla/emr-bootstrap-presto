@@ -1,0 +1,6 @@
+#
+# Shared
+#
+env: dev
+region: us-west-2
+subnet_id: subnet-4228de35

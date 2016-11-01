@@ -1,0 +1,98 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Metastore Stack
+
+Parameters:
+  Owner:
+    Description: The Owner tag of the cluster
+    Type: String
+
+  KeyName:
+    Description: Name of SSH keypair
+    Type: AWS::EC2::KeyPair::KeyName
+
+  SubnetId:
+    Description: Subnet to launch cluster in
+    Type: AWS::EC2::Subnet::Id
+
+  MasterInstanceType:
+    Description: Instance type for master
+    Type: String
+    AllowedValues: [
+      m3.xlarge, m3.2xlarge,
+      m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+      c3.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge,
+      c4.xlarge, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge,
+      g2.2xlarge,
+      r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge,
+      i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge,
+      d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge,
+    ]
+    ConstraintDescription: Must be a valid EMR instance type
+    Default: m4.large
+
+  CoreInstanceType:
+    Description: Instance type for core
+    Type: String
+    AllowedValues: [
+      m3.xlarge, m3.2xlarge,
+      m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+      c3.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge,
+      c4.xlarge, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge,
+      g2.2xlarge,
+      r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge,
+      i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge,
+      d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge,
+    ]
+    ConstraintDescription: Must be a valid EMR instance type
+    Default: m4.large
+
+  CoreInstanceCount:
+    Description: Number of core instances to run
+    Type: Number
+    Default: 2
+
+  Bucket:
+    Description: Bucket to pull the bootstrap scripts from
+    Type: String
+
+Resources:
+  Cluster:
+    Type: AWS::EMR::Cluster
+    Properties:
+      Applications:
+        - Name: Hive
+      BootstrapActions:
+        - Name: install-tools
+          ScriptBootstrapAction:
+            Path: !Sub s3://${Bucket}/bootstrap/install-tools.sh
+        - Name: parquet2hive
+          ScriptBootstrapAction:
+            Path: !Sub s3://${Bucket}/bootstrap/parquet2hive.sh
+      Instances:
+        CoreInstanceGroup:
+          InstanceCount: !Ref CoreInstanceCount
+          InstanceType: !Ref CoreInstanceType
+        Ec2KeyName: !Ref KeyName
+        Ec2SubnetId: !Ref SubnetId
+        MasterInstanceGroup:
+          InstanceCount: 1
+          InstanceType: !Ref MasterInstanceType
+        TerminationProtected: true
+      JobFlowRole: EMR_EC2_DefaultRole
+      Name: !Ref "AWS::StackName"
+      ReleaseLabel: emr-5.0.0
+      ServiceRole: EMR_DefaultRole
+      Tags:
+        - { Key: Name, Value: !Ref "AWS::StackName" }
+        - { Key: App, Value: telemetry }
+        - { Key: Type, Value: metastore }
+        - { Key: Owner, Value: !Ref Owner }
+        - { Key: REAPER_SPARE_ME, Value: "true" }
+      VisibleToAllUsers: true
+
+Outputs:
+  ClusterDNS:
+    Description: The DNS of the Master instance
+    Value: !GetAtt Cluster.MasterPublicDNS

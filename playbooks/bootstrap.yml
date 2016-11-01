@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+
+  tasks:
+    - include_vars: ../envs/default.yml
+
+    - name: create bucket
+      s3: bucket={{ bucket }} region={{ region }} mode=create
+
+    - name: copy bootstrap scripts
+      s3: bucket={{ bucket }} region={{ region }} object=bootstrap/{{ item }} src=../files/bootstrap/{{ item }} mode=put
+      with_items:
+        - install-tools.sh
+        - parquet2hive.sh
+        - presto-plugins.sh
