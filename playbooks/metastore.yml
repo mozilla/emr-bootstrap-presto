@@ -21,3 +21,4 @@
           CoreInstanceType: "{{ metastore_core_type }}"
           CoreInstanceCount: "{{ metastore_core_count }}"
           Bucket: "{{ bucket }}"
+          EMRRelease: "{{ metastore_emr_release }}"

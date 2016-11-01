@@ -32,3 +32,4 @@
           QueryNodeMemory: "{{ presto_query_node_memory }}"
           MetastoreDNS: "{{ metastore_dns }}"
           Bucket: "{{ bucket }}"
+          EMRRelease: "{{ presto_emr_release }}"

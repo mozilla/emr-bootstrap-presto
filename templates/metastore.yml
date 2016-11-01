@@ -57,6 +57,10 @@ Parameters:
     Description: Bucket to pull the bootstrap scripts from
     Type: String
 
+  EMRRelease:
+    Description: Label of EMR release to use for cluster
+    Type: String
+
 Resources:
   Cluster:
     Type: AWS::EMR::Cluster
@@ -82,7 +86,7 @@ Resources:
         TerminationProtected: true
       JobFlowRole: EMR_EC2_DefaultRole
       Name: !Ref "AWS::StackName"
-      ReleaseLabel: emr-5.0.0
+      ReleaseLabel: !Ref EMRRelease
       ServiceRole: EMR_DefaultRole
       Tags:
         - { Key: Name, Value: !Ref "AWS::StackName" }
