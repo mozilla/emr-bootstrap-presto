@@ -1,0 +1,26 @@
+#
+# Shared
+#
+key_name: 20161025-dataops-{{ env }}
+state: present
+bucket: telemetry-presto-emr
+
+#
+# Presto
+#
+presto_stack_name: telemetry-presto-{{ env }}
+presto_coordinator_type: m4.large
+presto_worker_count: 4
+presto_worker_type: m4.large
+presto_query_max_memory: 12GB
+presto_query_node_memory: 4GB
+presto_emr_release: emr-5.0.0
+
+#
+# Metastore
+#
+metastore_stack_name: telemetry-metastore-{{ env }}
+metastore_master_type: m4.large
+metastore_core_type: m4.large
+metastore_core_count: 2
+metastore_emr_release: emr-5.0.0

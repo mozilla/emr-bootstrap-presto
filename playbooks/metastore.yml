@@ -1,0 +1,24 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+
+  tasks:
+    - include_vars: ../envs/default.yml
+
+    - name: update metastore stack
+      action: cloudformation
+      args:
+        stack_name: "{{ metastore_stack_name }}"
+        state: "{{ state }}"
+        region: "{{ region }}"
+        template: ../templates/metastore.yml
+        template_parameters:
+          Owner: "{{ owner }}"
+          KeyName: "{{ key_name }}"
+          SubnetId: "{{ subnet_id }}"
+          MasterInstanceType: "{{ metastore_master_type }}"
+          CoreInstanceType: "{{ metastore_core_type }}"
+          CoreInstanceCount: "{{ metastore_core_count }}"
+          Bucket: "{{ bucket }}"
+          EMRRelease: "{{ metastore_emr_release }}"

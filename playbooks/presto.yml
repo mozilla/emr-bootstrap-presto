@@ -1,0 +1,35 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+
+  vars:
+    metastore_stack: "{{ cloudformation[metastore_stack_name] }}"
+    metastore_dns: "{{ metastore_stack.stack_outputs.ClusterDNS }}"
+
+  tasks:
+    - include_vars: ../envs/default.yml
+
+    - name: lookup metastore stack
+      cloudformation_facts:
+        stack_name: "{{ metastore_stack_name }}"
+        region: "{{ region }}"
+
+    - name: update presto stack
+      cloudformation:
+        stack_name: "{{ presto_stack_name }}"
+        state: "{{ state }}"
+        region: "{{ region }}"
+        template: ../templates/presto.yml
+        template_parameters:
+          Owner: "{{ owner }}"
+          KeyName: "{{ key_name }}"
+          SubnetId: "{{ subnet_id }}"
+          CoordinatorType: "{{ presto_coordinator_type }}"
+          WorkerType: "{{ presto_worker_type }}"
+          WorkerCount: "{{ presto_worker_count }}"
+          QueryMaxMemory: "{{ presto_query_max_memory }}"
+          QueryNodeMemory: "{{ presto_query_node_memory }}"
+          MetastoreDNS: "{{ metastore_dns }}"
+          Bucket: "{{ bucket }}"
+          EMRRelease: "{{ presto_emr_release }}"

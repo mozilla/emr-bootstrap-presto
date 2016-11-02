@@ -1,0 +1,128 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Presto Stack
+
+Parameters:
+  Owner:
+    Description: The Owner tag of the cluster
+    Type: String
+
+  KeyName:
+    Description: Name of SSH keypair
+    Type: AWS::EC2::KeyPair::KeyName
+
+  SubnetId:
+    Description: Subnet to launch cluster in
+    Type: AWS::EC2::Subnet::Id
+
+  CoordinatorType:
+    Description: Instance type for coordinator
+    Type: String
+    AllowedValues: [
+      m3.xlarge, m3.2xlarge,
+      m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+      c3.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge,
+      c4.xlarge, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge,
+      g2.2xlarge,
+      r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge,
+      i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge,
+      d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge,
+    ]
+    ConstraintDescription: Must be a valid EMR instance type
+    Default: m4.xlarge
+
+  WorkerType:
+    Description: Instance type for workers
+    Type: String
+    AllowedValues: [
+      m3.xlarge, m3.2xlarge,
+      m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+      c3.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge,
+      c4.xlarge, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge,
+      g2.2xlarge,
+      r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge,
+      i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge,
+      d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge,
+    ]
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: m4.xlarge
+
+  WorkerCount:
+    Description: Number of workers to run
+    Type: Number
+    Default: 4
+
+  QueryMaxMemory:
+    Description: The max memory that a query can use across the cluster
+    Type: String
+
+  QueryNodeMemory:
+    Description: The max memory that a query can use on each node
+    Type: String
+
+  MetastoreDNS:
+    Description: The DNS name of the metastore master instance
+    Type: String
+
+  Bucket:
+    Description: Bucket to pull the bootstrap scripts from
+    Type: String
+
+  EMRRelease:
+    Description: Label of EMR release to use for cluster
+    Type: String
+
+Resources:
+  Cluster:
+    Type: AWS::EMR::Cluster
+    Properties:
+      Applications:
+        - Name: Presto
+      BootstrapActions:
+        - Name: install-tools
+          ScriptBootstrapAction:
+            Path: !Sub s3://${Bucket}/bootstrap/install-tools.sh
+        - Name: presto-plugins
+          ScriptBootstrapAction:
+            Path: !Sub s3://${Bucket}/bootstrap/presto-plugins.sh
+            Args:
+              - !Sub s3://${Bucket}/plugins
+      Configurations:
+        - Classification: presto-config
+          ConfigurationProperties:
+            query.max-memory: !Ref QueryMaxMemory
+            query.max-memory-per-node: !Ref QueryNodeMemory
+            exchange.http-client.request-timeout: 120s
+        - Classification: presto-connector-hive
+          ConfigurationProperties:
+            hive.metastore.uri: !Sub thrift://${MetastoreDNS}:9083
+      Instances:
+        CoreInstanceGroup:
+          InstanceCount: !Ref WorkerCount
+          InstanceType: !Ref WorkerType
+        Ec2KeyName: !Ref KeyName
+        Ec2SubnetId: !Ref SubnetId
+        MasterInstanceGroup:
+          Configurations:
+            - Classification: presto-config
+              ConfigurationProperties:
+                scheduler.http-client.request-timeout: 120s
+          InstanceCount: 1
+          InstanceType: !Ref CoordinatorType
+      JobFlowRole: EMR_EC2_DefaultRole
+      Name: !Ref "AWS::StackName"
+      ReleaseLabel: !Ref EMRRelease
+      ServiceRole: EMR_DefaultRole
+      Tags:
+        - { Key: Name, Value: !Ref "AWS::StackName" }
+        - { Key: App, Value: telemetry }
+        - { Key: Type, Value: presto }
+        - { Key: Owner, Value: !Ref Owner }
+        - { Key: REAPER_SPARE_ME, Value: "true" }
+      VisibleToAllUsers: true
+
+Outputs:
+  ClusterDNS:
+    Description: The DNS of the Master instance
+    Value: !GetAtt Cluster.MasterPublicDNS
