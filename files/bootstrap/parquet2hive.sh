@@ -33,6 +33,8 @@ crontab <<EOF
 9  5 * * * $HOME/venv/bin/parquet2hive -ulv 1 s3://net-mozaws-prod-us-west-2-pipeline-analysis/isegall/vtabs_daily | tee -a vtabs_daily.log | bash
 9 15 * * * $HOME/venv/bin/parquet2hive -ulv 1 s3://net-mozaws-prod-us-west-2-pipeline-analysis/isegall/blok_daily | tee -a blok_daily.log | bash
 9 20 * * * $HOME/venv/bin/parquet2hive -ulv 1 s3://net-mozaws-prod-us-west-2-pipeline-analysis/isegall/minvid_daily | tee -a minvid_daily.log | bash
-3  7 * * * $HOME/venv/bin/parquet2hive -ulv 1 s3://net-mozaws-prod-us-west-2-pipeline-analysis/mreid/socorro_crash | tee -a socorro_crash.log | bash
+3  7 * * * $HOME/venv/bin/parquet2hive -ulv 1 s3://telemetry-parquet/socorro_crash | tee -a socorro_crash.log | bash
 0  4 * * * $HOME/venv/bin/parquet2hive -ulv 1 s3://telemetry-parquet/sync_summary | tee -a sync_summary.log | bash
+6  6 * * * $HOME/venv/bin/parquet2hive -ulv 1 s3://telemetry-parquet/churn | tee -a churn.log | bash
+20 2 * * * $HOME/venv/bin/parquet2hive -ulv 1 s3://net-mozaws-prod-us-west-2-pipeline-analysis/ssuh/txp_events | tee -a txp_events.log | bash
 EOF
