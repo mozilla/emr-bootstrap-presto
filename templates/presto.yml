@@ -97,6 +97,7 @@ Resources:
         - Classification: presto-connector-hive
           ConfigurationProperties:
             hive.metastore.uri: !Sub thrift://${MetastoreDNS}:9083
+            hive.parquet.use-column-names: "true"
       Instances:
         CoreInstanceGroup:
           InstanceCount: !Ref WorkerCount
