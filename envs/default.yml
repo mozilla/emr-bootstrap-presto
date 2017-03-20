@@ -8,18 +8,18 @@ bucket: telemetry-presto-emr
 #
 # Presto
 #
-presto_stack_name: telemetry-presto-{{ env }}
-presto_coordinator_type: m4.large
-presto_worker_count: 4
-presto_worker_type: m4.large
-presto_query_max_memory: 12GB
-presto_query_node_memory: 4GB
-presto_emr_release: emr-5.0.0
+presto_stack_name: telemetry-presto
+presto_coordinator_type: m4.xlarge
+presto_worker_count: 32
+presto_worker_type: m4.xlarge
+presto_query_max_memory: 96GB
+presto_query_node_memory: 6GB
+presto_emr_release: emr-5.1.0
 
 #
 # Metastore
 #
-metastore_stack_name: telemetry-metastore-{{ env }}
+metastore_stack_name: telemetry-metastore
 metastore_master_type: m4.large
 metastore_core_type: m4.large
 metastore_core_count: 2
